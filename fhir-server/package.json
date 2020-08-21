@@ -1,0 +1,25 @@
+{
+  "name": "fhir-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@asymmetrik/node-fhir-server-core": "^2.0.10",
+    "@asymmetrik/sof-strategy": "^1.1.1",
+    "couchbase": "^3.0.5",
+    "dotenv": "^8.2.0",
+    "fast-json-patch": "^3.0.0-1",
+    "moment-timezone": "^0.5.31",
+    "uuid": "^8.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
