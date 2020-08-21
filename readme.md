@@ -23,12 +23,18 @@ composer install
 php artisan passport:install
 ```
 
-5. Issue access tokens using Postman Autorization tab->Select Oauth 2.0 type->Click Get new Access token
+5. run server
+
+```bash
+php artisan serve
+```
+
+6. Issue access tokens using Postman Autorization tab->Select Oauth 2.0 type->Click Get new Access token
    ![img](https://i.ibb.co/6XmD0pM/instruction.png)
-6. Fill out request token form
+7. Fill out request token form
    ![img](https://i.ibb.co/j6j0Dqy/issue-tokens.png)
-7. Login form use - email: jd@gmail.com password: 12345678
-8. Use issued tokens as Authorization bearer header when accessing fhir-server endpoints.
+8. Login form use - email: jd@gmail.com password: 12345678
+9. Use issued tokens as Authorization bearer header when accessing fhir-server endpoints.
 
 ## FHIR Server setup
 
