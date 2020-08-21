@@ -1,7 +1,7 @@
 const cluster = require("./config");
 
 // Bucket name
-const bucketName = "fhir_sample";
+const bucketName = process.env.COUCHBASE_BUCKET;
 
 const bucket = cluster.bucket(bucketName);
 const collection = bucket.defaultCollection();
