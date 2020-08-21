@@ -27,7 +27,8 @@ php artisan passport:install
    ![img](https://i.ibb.co/6XmD0pM/instruction.png)
 6. Fill out request token form
    ![img](https://i.ibb.co/j6j0Dqy/issue-tokens.png)
-7. Use issued tokens as Authorization bearer header when accessing fhir-server endpoints.
+7. Login form use - email: jd@gmail.com password: 12345678
+8. Use issued tokens as Authorization bearer header when accessing fhir-server endpoints.
 
 ## FHIR Server setup
 
