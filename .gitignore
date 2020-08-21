@@ -7,8 +7,6 @@ auth-server/public/storage
 auth-server/storage/*.key
 auth-server/vendor
 auth-server/.idea
-auth-server/.env
-auth-server/.env.backup
 auth-server/.phpunit.result.cache
 auth-server/Homestead.json
 auth-server/Homestead.yaml
