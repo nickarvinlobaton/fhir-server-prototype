@@ -53,7 +53,7 @@ npm install
 npm run dev
 ```
 
-4. Fhir server rest api endpoints\
+5. Fhir server rest api endpoints\
    -Create patient - POST http://localhost:3000/4_0_0/Patient \
    -Get patient by ID - GET http://localhost:3000/4_0_0/Patient/:id \
    -Delete patient - DELETE http://localhost:3000/4_0_0/Patient/:id \
