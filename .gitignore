@@ -1,3 +1,5 @@
+.idea/
+
 fhir-server/node_modules/
 fhir-server/package-lock.json
 
