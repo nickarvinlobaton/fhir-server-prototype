@@ -1,3 +1,5 @@
+const path = require("path");
+
 const {
   initialize,
   loggers,
@@ -24,6 +26,19 @@ let config = {
     Patient: {
       service: "./services/patient.service.js",
       versions: [VERSIONS["4_0_0"]],
+      // Custom operations
+      operation: [
+        {
+          name: "agate-upsert",
+          route: "/:id/agate-upsert",
+          method: "GET",
+        },
+        // {
+        //   name: "agate-find",
+        //   route: "/:id/agate-find",
+        //   method: "GET",
+        // },
+      ],
     },
     Medication: {
       service: "./services/medication.service.js",

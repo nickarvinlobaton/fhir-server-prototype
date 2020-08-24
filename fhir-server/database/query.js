@@ -53,6 +53,30 @@ const query = {
       return e;
     }
   },
+  // Agate query
+  getAgate: async (type, id) => {
+    let qs = `SELECT * FROM \`${bucketName}\` res WHERE res.type='${type}' AND res.referenceId='${id}'`;
+
+    try {
+      let result = await cluster.query(qs);
+      return result;
+    } catch (e) {
+      return e;
+    }
+  },
+  upsertAgate: async (type, id, doc) => {
+    let qs = `UPSERT INTO \`${bucketName}\` (KEY, VALUE)
+    VALUES ("${type}_${id}", ${JSON.stringify(doc)})  RETURNING *`;
+
+    try {
+      let result = await cluster.query(qs);
+      console.log(qs);
+      return result;
+    } catch (e) {
+      console.log("err");
+      return e;
+    }
+  },
 };
 
 module.exports = query;

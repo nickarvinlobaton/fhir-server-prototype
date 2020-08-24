@@ -1,4 +1,7 @@
-const { resolveSchema } = require("@asymmetrik/node-fhir-server-core");
+const {
+  resolveSchema,
+  ServerError,
+} = require("@asymmetrik/node-fhir-server-core");
 const { v4: uuidv4 } = require("uuid");
 const moment = require("moment-timezone");
 const jsonpatch = require("fast-json-patch");
@@ -48,11 +51,19 @@ module.exports.searchById = (args, contexts, logger) =>
       .getResourceById(resourceType, args.id)
       .then((res) => {
         if (res.rows.length < 1) {
-          // return reject({
-          //   code: "404",
-          //   message: "No Patient resource with the given ID found.",
-          // });
-          throw new Error("No Patient resource with the given ID found.");
+          let message = "No Patient resource with the given ID found.";
+          throw new ServerError(message, {
+            // Set this to make the HTTP status code 409
+            statusCode: 404,
+            // Add any normal operation outcome stuff here
+            issue: [
+              {
+                severity: "error",
+                code: "internal",
+                details: { text: message },
+              },
+            ],
+          });
         }
         return resolve(new Patient(res.rows[0].res));
       })
@@ -128,6 +139,72 @@ module.exports.patch = (args, { req }, logger) =>
           .catch((e) => {
             return reject(e);
           });
+      })
+      .catch((e) => {
+        return reject(e);
+      });
+  });
+
+// Custom operations for AGATE
+module.exports.agateUpsert = (args, context, logger) =>
+  new Promise((resolve, reject) => {
+    const { req } = context;
+    const type = "agate";
+    let id = uuidv4();
+
+    // Check if agate record already exists
+    query
+      .getAgate(type, args.id)
+      .then((res) => {
+        if (res.rows.length < 1) {
+          console.log("if");
+          let newAgate = {
+            type: type,
+            id: id,
+            referenceId: args.id,
+            weight: [
+              {
+                date: moment.utc().format("YYYY-MM-DDTHH:mm:ssZ"),
+                value: req.query.weight,
+              },
+            ],
+          };
+
+          query
+            .upsertAgate(type, id, newAgate)
+            .then((res) => {
+              console.log(newAgate);
+              console.log(res.rows[0]);
+              return resolve({
+                id: newAgate.id,
+              });
+            })
+            .catch((e) => {
+              logger.error("Error with agate.create");
+              return reject(e);
+            });
+        } else {
+          // If already exists, push new weight to the agate record
+          let newWeight = {
+            date: moment.utc().format("YYYY-MM-DDTHH:mm:ssZ"),
+            value: req.query.weight,
+          };
+          let agate = res.rows[0].res;
+          agate.weight.push(newWeight);
+
+          // Update current agate weight
+          query
+            .upsertAgate(type, agate.id, agate)
+            .then((res) => {
+              return resolve({
+                id: agate.id,
+              });
+            })
+            .catch((e) => {
+              logger.error("Error with agate.create");
+              return reject(e);
+            });
+        }
       })
       .catch((e) => {
         return reject(e);
