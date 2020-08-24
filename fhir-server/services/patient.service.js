@@ -43,7 +43,7 @@ module.exports.create = (args, { req }, logger) =>
   });
 
 // Search Patient resource by ID
-module.exports.searchById = (args, contexts, logger) =>
+module.exports.searchById = (args, context, logger) =>
   new Promise((resolve, reject) => {
     let Patient = require(resolveSchema(args.base_version, resourceType));
 
@@ -205,6 +205,36 @@ module.exports.agateUpsert = (args, context, logger) =>
               return reject(e);
             });
         }
+      })
+      .catch((e) => {
+        return reject(e);
+      });
+  });
+
+module.exports.agateFind = (args, context, logger) =>
+  new Promise((resolve, reject) => {
+    const type = "agate";
+    query
+      .getAgate(type, args.id)
+      .then((res) => {
+        if (res.rows.length < 1) {
+          let message = "No Patient resource with the given ID found.";
+          throw new ServerError(message, {
+            // Set this to make the HTTP status code 409
+            statusCode: 404,
+            // Add any normal operation outcome stuff here
+            issue: [
+              {
+                severity: "error",
+                code: "internal",
+                details: { text: message },
+              },
+            ],
+          });
+        }
+        let weights = res.rows[0].res.weight;
+        console.log(weights.reverse());
+        return resolve(res.rows[0].res);
       })
       .catch((e) => {
         return reject(e);

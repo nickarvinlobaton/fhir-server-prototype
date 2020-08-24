@@ -33,11 +33,11 @@ let config = {
           route: "/:id/agate-upsert",
           method: "GET",
         },
-        // {
-        //   name: "agate-find",
-        //   route: "/:id/agate-find",
-        //   method: "GET",
-        // },
+        {
+          name: "agate-find",
+          route: "/:id/agate-find",
+          method: "GET",
+        },
       ],
     },
     Medication: {
