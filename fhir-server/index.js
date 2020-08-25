@@ -39,6 +39,11 @@ let config = {
           method: "GET",
         },
         {
+          name: "agate-delete",
+          route: "/agate-delete",
+          method: "POST",
+        },
+        {
           name: "agate-score",
           route: "/:id/agate-score",
           method: "GET",

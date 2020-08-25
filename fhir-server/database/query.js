@@ -77,6 +77,18 @@ const query = {
       return e;
     }
   },
+  deleteAgate: async (type, id) => {
+    let qs = `DELETE FROM \`${bucketName}\` WHERE type='${type}' AND referenceId='${id}'`;
+
+    try {
+      let result = await cluster.query(qs);
+      console.log(qs);
+      return result;
+    } catch (e) {
+      console.log("err");
+      return e;
+    }
+  },
 };
 
 module.exports = query;

@@ -379,3 +379,27 @@ module.exports.agateScore = (args, context, logger) =>
         return reject(e);
       });
   });
+
+module.exports.agateDelete = (args, context, logger) =>
+  new Promise((resolve, reject) => {
+    let { req } = context;
+    let type = "agate";
+    console.log(req.body.id);
+
+    query
+      .deleteAgate(type, req.body.id)
+      .then(() => {
+        return resolve({ message: "Agate record deleted" });
+      })
+      .catch((e) => {
+        logger.error("Error with agate.delete");
+        return reject({
+          // Must be 405 (Method Not Allowed) or 409 (Conflict)
+          // 405 if you do not want to allow the delete
+          // 409 if you can't delete because of referential
+          // integrity or some other reason
+          code: 409,
+          message: "Error deleting agate record.",
+        });
+      });
+  });
