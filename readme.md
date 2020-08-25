@@ -116,6 +116,8 @@ npm run dev
 }
 ```
 
+6. Set Content-Type value to application/fhir+json when accessing fhir endpoints.
+
 ## Scopes
 
 1. To enable allow all scopes edit auth-server/app/Providers/AuthServiceProvider.php boot() function
