@@ -153,21 +153,22 @@ module.exports.agateUpsert = (args, context, logger) =>
     const { req } = context;
     const type = "agate";
     let id = uuidv4();
+    console.log(req.body);
 
     // Check if agate record already exists for a patient
     query
-      .getAgate(type, args.id)
+      .getAgate(type, req.body.id)
       .then((res) => {
         if (res.rows.length < 1) {
           let newAgate = {
             type: type,
             id: id,
-            referenceId: args.id,
+            referenceId: req.body.id,
             weeklyRecord: [
               {
                 date: moment.utc().format("YYYY-MM-DDTHH:mm:ssZ"),
-                weight: req.query.weight,
-                motivation: req.query.motivation,
+                weight: req.body.weight,
+                motivation: req.body.motivation,
                 number: 1,
               },
             ],
@@ -191,8 +192,8 @@ module.exports.agateUpsert = (args, context, logger) =>
           let agate = res.rows[0].res;
           let newRecord = {
             date: moment.utc().format("YYYY-MM-DDTHH:mm:ssZ"),
-            weight: req.query.weight,
-            motivation: req.query.motivation,
+            weight: req.body.weight,
+            motivation: req.body.motivation,
             number:
               agate.weeklyRecord[agate.weeklyRecord.length - 1].number + 1,
           };

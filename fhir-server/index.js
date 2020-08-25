@@ -30,8 +30,8 @@ let config = {
       operation: [
         {
           name: "agate-upsert",
-          route: "/:id/agate-upsert",
-          method: "GET",
+          route: "/agate-upsert",
+          method: "POST",
         },
         {
           name: "agate-find",
