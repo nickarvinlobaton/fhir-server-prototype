@@ -53,7 +53,7 @@ const query = {
       return e;
     }
   },
-  // Agate query
+  /** Agate query */
   getAgate: async (type, id) => {
     let qs = `SELECT * FROM \`${bucketName}\` res WHERE res.type='${type}' AND res.referenceId='${id}'`;
 

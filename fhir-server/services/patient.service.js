@@ -145,14 +145,16 @@ module.exports.patch = (args, { req }, logger) =>
       });
   });
 
-// Custom operations for AGATE
+/**Custom operations for AGATE */
+
+// Update or Create an agate record for a patient
 module.exports.agateUpsert = (args, context, logger) =>
   new Promise((resolve, reject) => {
     const { req } = context;
     const type = "agate";
     let id = uuidv4();
 
-    // Check if agate record already exists
+    // Check if agate record already exists for a patient
     query
       .getAgate(type, args.id)
       .then((res) => {
@@ -186,7 +188,6 @@ module.exports.agateUpsert = (args, context, logger) =>
         } else {
           // If already exists, push new weight to the agate record
           let agate = res.rows[0].res;
-          console.log(agate.weight[agate.weight.length - 1].number);
           let newWeight = {
             date: moment.utc().format("YYYY-MM-DDTHH:mm:ssZ"),
             value: req.query.weight,
@@ -195,7 +196,7 @@ module.exports.agateUpsert = (args, context, logger) =>
 
           agate.weight.push(newWeight);
 
-          // Update current agate weight
+          // Update current agate weight to push new weight
           query
             .upsertAgate(type, agate.id, agate)
             .then((res) => {
@@ -214,6 +215,7 @@ module.exports.agateUpsert = (args, context, logger) =>
       });
   });
 
+// Retrieve an agate record for a patient
 module.exports.agateFind = (args, context, logger) =>
   new Promise((resolve, reject) => {
     const type = "agate";
@@ -242,4 +244,74 @@ module.exports.agateFind = (args, context, logger) =>
       .catch((e) => {
         return reject(e);
       });
+  });
+
+// Computed agate score endpoint
+module.exports.agateScore = (args, context, logger) =>
+  new Promise((resolve, reject) => {
+    let type = "agate";
+
+    query.getAgate(type, args.id).then((res) => {
+      // console.log(res.rows[0].res.weight);
+      let weights = res.rows[0].res.weight;
+
+      let WLS = 0; // Weight loss slope past 4 weeks
+      let WW = 0; // Weight loss from past week
+
+      //Sort
+      let descSortedWeights = weights.sort((a, b) =>
+        a.number > b.number ? -1 : 1
+      );
+      console.log(descSortedWeights);
+
+      /**Todo: Check if weight array length is already 4. WLS needs at least 4 weeks of
+       * weight record
+       */
+
+      // Compute WLS score
+      if (
+        parseFloat(descSortedWeights[0].value) -
+          parseFloat(descSortedWeights[3].value) <
+        0
+      ) {
+        WLS = 10;
+      } else if (
+        parseFloat(descSortedWeights[0].value) -
+          parseFloat(descSortedWeights[3].value) ==
+        0
+      ) {
+        WLS = 5;
+      } else if (
+        parseFloat(descSortedWeights[0].value) -
+          parseFloat(descSortedWeights[3].value) >
+        0
+      ) {
+        WLS = 0;
+      }
+      console.log("WLS = " + WLS);
+
+      if (
+        parseFloat(descSortedWeights[1].value) -
+          parseFloat(descSortedWeights[0].value) >=
+        0.5
+      ) {
+        WW = 5;
+      } else if (
+        parseFloat(descSortedWeights[1].value) -
+          parseFloat(descSortedWeights[0].value) <
+          0.5 ||
+        parseFloat(descSortedWeights[1].value) -
+          parseFloat(descSortedWeights[0].value) >
+          -0.5
+      ) {
+        WW = 3;
+      } else if (
+        parseFloat(descSortedWeights[1].value) -
+          parseFloat(descSortedWeights[0].value) <=
+        -0.5
+      ) {
+        WW = 1;
+      }
+      console.log("WW = " + WW);
+    });
   });

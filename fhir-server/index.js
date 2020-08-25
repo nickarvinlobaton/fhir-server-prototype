@@ -38,6 +38,11 @@ let config = {
           route: "/:id/agate-find",
           method: "GET",
         },
+        {
+          name: "agate-score",
+          route: "/:id/agate-score",
+          method: "GET",
+        },
       ],
     },
     Medication: {
