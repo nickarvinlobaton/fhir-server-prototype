@@ -240,8 +240,7 @@ module.exports.agateFind = (args, context, logger) =>
             ],
           });
         }
-        let weights = res.rows[0].res.weight;
-        console.log(weights.reverse());
+
         return resolve(res.rows[0].res);
       })
       .catch((e) => {
@@ -254,67 +253,128 @@ module.exports.agateScore = (args, context, logger) =>
   new Promise((resolve, reject) => {
     let type = "agate";
 
-    query.getAgate(type, args.id).then((res) => {
-      // console.log(res.rows[0].res.weight);
-      let weights = res.rows[0].res.weight;
+    query
+      .getAgate(type, args.id)
+      .then((res) => {
+        if (res.rows.length < 1) {
+          let message = "No Patient resource with the given ID found.";
+          throw new ServerError(message, {
+            // Set this to make the HTTP status code 409
+            statusCode: 404,
+            // Add any normal operation outcome stuff here
+            issue: [
+              {
+                severity: "error",
+                code: "internal",
+                details: { text: message },
+              },
+            ],
+          });
+        }
+        // console.log(res.rows[0].res.weight);
+        let records = res.rows[0].res.weeklyRecord;
 
-      let WLS = 0; // Weight loss slope past 4 weeks
-      let WW = 0; // Weight loss from past week
+        let WLS = 0; // Weight loss slope past 4 weeks
+        let WW = 0; // Weight loss from past week
+        let MN = 0; // Motivation
 
-      //Sort
-      let descSortedWeights = weights.sort((a, b) =>
-        a.number > b.number ? -1 : 1
-      );
-      console.log(descSortedWeights);
+        //Sort
+        let descSortedRecords = records.sort((a, b) =>
+          a.number > b.number ? -1 : 1
+        );
+        console.log(descSortedRecords);
 
-      /**Todo: Check if weight array length is already 4. WLS needs at least 4 weeks of
-       * weight record
-       */
+        MN = parseInt(descSortedRecords[0].motivation);
 
-      // Compute WLS score
-      if (
-        parseFloat(descSortedWeights[0].value) -
-          parseFloat(descSortedWeights[3].value) <
-        0
-      ) {
-        WLS = 10;
-      } else if (
-        parseFloat(descSortedWeights[0].value) -
-          parseFloat(descSortedWeights[3].value) ==
-        0
-      ) {
-        WLS = 5;
-      } else if (
-        parseFloat(descSortedWeights[0].value) -
-          parseFloat(descSortedWeights[3].value) >
-        0
-      ) {
-        WLS = 0;
-      }
-      console.log("WLS = " + WLS);
+        /**Todo: Check if weight array length is already 4. WLS needs at least 4 weeks of
+         * weight record
+         */
 
-      if (
-        parseFloat(descSortedWeights[1].value) -
-          parseFloat(descSortedWeights[0].value) >=
-        0.5
-      ) {
-        WW = 5;
-      } else if (
-        parseFloat(descSortedWeights[1].value) -
-          parseFloat(descSortedWeights[0].value) <
-          0.5 ||
-        parseFloat(descSortedWeights[1].value) -
-          parseFloat(descSortedWeights[0].value) >
-          -0.5
-      ) {
-        WW = 3;
-      } else if (
-        parseFloat(descSortedWeights[1].value) -
-          parseFloat(descSortedWeights[0].value) <=
-        -0.5
-      ) {
-        WW = 1;
-      }
-      console.log("WW = " + WW);
-    });
+        if (descSortedRecords.length < 4) {
+          let message =
+            "Cant compute agate score with less than 4 weeks record";
+          throw new ServerError(message, {
+            statusCode: 400,
+            issue: [
+              {
+                severity: "error",
+                code: "internal",
+                details: { text: message },
+              },
+            ],
+          });
+        } else {
+          if (
+            parseFloat(descSortedRecords[0].weight) -
+              parseFloat(descSortedRecords[3].weight) <
+            0
+          ) {
+            WLS = 10;
+          } else if (
+            parseFloat(descSortedRecords[0].weight) -
+              parseFloat(descSortedRecords[3].weight) ==
+            0
+          ) {
+            WLS = 5;
+          } else if (
+            parseFloat(descSortedRecords[0].weight) -
+              parseFloat(descSortedRecords[3].weight) >
+            0
+          ) {
+            WLS = 0;
+          }
+
+          // Compute WW
+          if (
+            parseFloat(descSortedRecords[1].weight) -
+              parseFloat(descSortedRecords[0].weight) >=
+            0.5
+          ) {
+            WW = 5;
+          } else if (
+            parseFloat(descSortedRecords[1].weight) -
+              parseFloat(descSortedRecords[0].weight) <
+              0.5 &&
+            parseFloat(descSortedRecords[1].weight) -
+              parseFloat(descSortedRecords[0].weight) >
+              -0.5
+          ) {
+            WW = 3;
+          } else if (
+            parseFloat(descSortedRecords[1].weight) -
+              parseFloat(descSortedRecords[0].weight) <=
+            -0.5
+          ) {
+            WW = 1;
+          }
+          console.log("WLS = " + +WLS);
+          console.log("WW = " + +WW);
+          console.log("MN = " + +MN);
+
+          // Compute AGATE score and set Interpretation message based on score
+          const agateScore = WLS + WW + MN;
+          let interpretation = "";
+          if (agateScore >= 21 && agateScore <= 25) {
+            interpretation = "Highly engaged and motivated";
+          } else if (agateScore >= 16 && agateScore <= 20) {
+            interpretation = "Moderately engaged and motivated";
+          } else if (agateScore >= 11 && agateScore <= 15) {
+            interpretation =
+              "Minimally engaged/Somewhat vulnerable to drop off";
+          } else if (agateScore >= 6 && agateScore <= 10) {
+            interpretation = "Highly vulnerable to dropping off";
+          } else if (agateScore >= 0 && agateScore <= 5) {
+            interpretation = "Extremely vulnerable to dropping off";
+          }
+
+          return resolve({
+            message: "AGATE score",
+            score: agateScore,
+            interpretation: interpretation,
+          });
+        }
+      })
+      .catch((e) => {
+        return reject(e);
+      });
   });
