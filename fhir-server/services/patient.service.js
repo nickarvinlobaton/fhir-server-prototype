@@ -157,7 +157,6 @@ module.exports.agateUpsert = (args, context, logger) =>
       .getAgate(type, args.id)
       .then((res) => {
         if (res.rows.length < 1) {
-          console.log("if");
           let newAgate = {
             type: type,
             id: id,
@@ -166,6 +165,7 @@ module.exports.agateUpsert = (args, context, logger) =>
               {
                 date: moment.utc().format("YYYY-MM-DDTHH:mm:ssZ"),
                 value: req.query.weight,
+                number: 1,
               },
             ],
           };
@@ -185,11 +185,14 @@ module.exports.agateUpsert = (args, context, logger) =>
             });
         } else {
           // If already exists, push new weight to the agate record
+          let agate = res.rows[0].res;
+          console.log(agate.weight[agate.weight.length - 1].number);
           let newWeight = {
             date: moment.utc().format("YYYY-MM-DDTHH:mm:ssZ"),
             value: req.query.weight,
+            number: agate.weight[agate.weight.length - 1].number + 1,
           };
-          let agate = res.rows[0].res;
+
           agate.weight.push(newWeight);
 
           // Update current agate weight
