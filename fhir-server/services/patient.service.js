@@ -163,10 +163,11 @@ module.exports.agateUpsert = (args, context, logger) =>
             type: type,
             id: id,
             referenceId: args.id,
-            weight: [
+            weeklyRecord: [
               {
                 date: moment.utc().format("YYYY-MM-DDTHH:mm:ssZ"),
-                value: req.query.weight,
+                weight: req.query.weight,
+                motivation: req.query.motivation,
                 number: 1,
               },
             ],
@@ -188,13 +189,15 @@ module.exports.agateUpsert = (args, context, logger) =>
         } else {
           // If already exists, push new weight to the agate record
           let agate = res.rows[0].res;
-          let newWeight = {
+          let newRecord = {
             date: moment.utc().format("YYYY-MM-DDTHH:mm:ssZ"),
-            value: req.query.weight,
-            number: agate.weight[agate.weight.length - 1].number + 1,
+            weight: req.query.weight,
+            motivation: req.query.motivation,
+            number:
+              agate.weeklyRecord[agate.weeklyRecord.length - 1].number + 1,
           };
 
-          agate.weight.push(newWeight);
+          agate.weeklyRecord.push(newRecord);
 
           // Update current agate weight to push new weight
           query
