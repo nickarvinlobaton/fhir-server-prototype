@@ -164,7 +164,7 @@ module.exports.agateUpsert = (args, context, logger) =>
             type: type,
             id: id,
             referenceId: req.body.id,
-            weeklyRecord: [
+            record: [
               {
                 date: moment.utc().format("YYYY-MM-DDTHH:mm:ssZ"),
                 weight: req.body.weight,
@@ -194,11 +194,10 @@ module.exports.agateUpsert = (args, context, logger) =>
             date: moment.utc().format("YYYY-MM-DDTHH:mm:ssZ"),
             weight: req.body.weight,
             motivation: req.body.motivation,
-            number:
-              agate.weeklyRecord[agate.weeklyRecord.length - 1].number + 1,
+            number: agate.record[agate.record.length - 1].number + 1,
           };
 
-          agate.weeklyRecord.push(newRecord);
+          agate.record.push(newRecord);
 
           // Update current agate weight to push new weight
           query
@@ -254,48 +253,14 @@ module.exports.agateScore = (args, context, logger) =>
   new Promise((resolve, reject) => {
     let type = "agate";
 
+    // Compute WLS, WW & MN
     query
-      .getAgate(type, args.id)
+      .filterAgateRecordByMonth(type, args.id)
       .then((res) => {
-        if (res.rows.length < 1) {
-          let message = "No Patient resource with the given ID found.";
+        if (res.rows < 1) {
+          let message = "Not enough data recorded to compute AGATE score.";
           throw new ServerError(message, {
-            // Set this to make the HTTP status code 409
             statusCode: 404,
-            // Add any normal operation outcome stuff here
-            issue: [
-              {
-                severity: "error",
-                code: "internal",
-                details: { text: message },
-              },
-            ],
-          });
-        }
-        // console.log(res.rows[0].res.weight);
-        let records = res.rows[0].res.weeklyRecord;
-
-        let WLS = 0; // Weight loss slope past 4 weeks
-        let WW = 0; // Weight loss from past week
-        let MN = 0; // Motivation
-
-        //Sort
-        let descSortedRecords = records.sort((a, b) =>
-          a.number > b.number ? -1 : 1
-        );
-        console.log(descSortedRecords);
-
-        MN = parseInt(descSortedRecords[0].motivation);
-
-        /**Todo: Check if weight array length is already 4. WLS needs at least 4 weeks of
-         * weight record
-         */
-
-        if (descSortedRecords.length < 4) {
-          let message =
-            "Cant compute agate score with less than 4 weeks record";
-          throw new ServerError(message, {
-            statusCode: 400,
             issue: [
               {
                 severity: "error",
@@ -305,74 +270,121 @@ module.exports.agateScore = (args, context, logger) =>
             ],
           });
         } else {
+          let WLS; // Weight Loss Slope
+          let WW; // Weight Loss in the Past Week
+          let MN; // Current Motivation
+
+          console.log(res.rows);
+          let filteredRecord = res.rows;
+          let lastIndex = filteredRecord.length - 1;
+
+          // Current motivation value
+          MN = +filteredRecord[lastIndex].filtered_record.motivation;
+
+          // Compute WLS
           if (
-            parseFloat(descSortedRecords[0].weight) -
-              parseFloat(descSortedRecords[3].weight) <
-            0
+            parseFloat(filteredRecord[lastIndex].filtered_record.weight) -
+              parseFloat(filteredRecord[0].filtered_record.weight) <
+            1
           ) {
             WLS = 10;
           } else if (
-            parseFloat(descSortedRecords[0].weight) -
-              parseFloat(descSortedRecords[3].weight) ==
+            parseFloat(filteredRecord[lastIndex].filtered_record.weight) -
+              parseFloat(filteredRecord[0].filtered_record.weight) ==
             0
           ) {
             WLS = 5;
           } else if (
-            parseFloat(descSortedRecords[0].weight) -
-              parseFloat(descSortedRecords[3].weight) >
-            0
+            parseFloat(filteredRecord[lastIndex].filtered_record.weight) -
+              parseFloat(filteredRecord[0].filtered_record.weight) >
+            1
           ) {
             WLS = 0;
           }
 
           // Compute WW
-          if (
-            parseFloat(descSortedRecords[1].weight) -
-              parseFloat(descSortedRecords[0].weight) >=
-            0.5
-          ) {
-            WW = 5;
-          } else if (
-            parseFloat(descSortedRecords[1].weight) -
-              parseFloat(descSortedRecords[0].weight) <
-              0.5 &&
-            parseFloat(descSortedRecords[1].weight) -
-              parseFloat(descSortedRecords[0].weight) >
-              -0.5
-          ) {
-            WW = 3;
-          } else if (
-            parseFloat(descSortedRecords[1].weight) -
-              parseFloat(descSortedRecords[0].weight) <=
-            -0.5
-          ) {
-            WW = 1;
-          }
-          console.log("WLS = " + +WLS);
-          console.log("WW = " + +WW);
-          console.log("MN = " + +MN);
+          query
+            .filterAgateRecordByWeek(type, args.id)
+            .then((res) => {
+              if (res.rows < 1) {
+                let message =
+                  "Not enough data recorded to compute AGATE score.";
+                throw new ServerError(message, {
+                  statusCode: 404,
+                  issue: [
+                    {
+                      severity: "error",
+                      code: "internal",
+                      details: { text: message },
+                    },
+                  ],
+                });
+              } else {
+                console.log(res.rows);
+                let filteredRecord = res.rows;
+                let lastIndex = filteredRecord.length - 1;
 
-          // Compute AGATE score and set Interpretation message based on score
-          const agateScore = WLS + WW + MN;
-          let interpretation = "";
-          if (agateScore >= 21 && agateScore <= 25) {
-            interpretation = "Highly engaged and motivated";
-          } else if (agateScore >= 16 && agateScore <= 20) {
-            interpretation = "Moderately engaged and motivated";
-          } else if (agateScore >= 11 && agateScore <= 15) {
-            interpretation =
-              "Minimally engaged/Somewhat vulnerable to drop off";
-          } else if (agateScore >= 6 && agateScore <= 10) {
-            interpretation = "Highly vulnerable to dropping off";
-          } else if (agateScore >= 0 && agateScore <= 5) {
-            interpretation = "Extremely vulnerable to dropping off";
-          }
+                if (
+                  parseFloat(filteredRecord[0].filtered_record.weight) -
+                    parseFloat(
+                      filteredRecord[lastIndex].filtered_record.weight
+                    ) >
+                  0.5
+                ) {
+                  WW = 5;
+                } else if (
+                  parseFloat(filteredRecord[0].filtered_record.weight) -
+                    parseFloat(
+                      filteredRecord[lastIndex].filtered_record.weight
+                    ) <
+                    0.5 &&
+                  parseFloat(filteredRecord[0].filtered_record.weight) -
+                    parseFloat(
+                      filteredRecord[lastIndex].filtered_record.weight
+                    ) >
+                    -0.5
+                ) {
+                  WW = 3;
+                } else if (
+                  parseFloat(filteredRecord[0].filtered_record.weight) -
+                    parseFloat(
+                      filteredRecord[lastIndex].filtered_record.weight
+                    ) <=
+                  -0.5
+                ) {
+                  WW = 1;
+                }
 
-          return resolve({
-            message: "AGATE score",
-            score: agateScore,
-            interpretation: interpretation,
-          });
+                console.log("WLS = " + WLS);
+                console.log("WW = " + WW);
+                console.log("MN = " + MN);
+
+                const agateScore = WLS + WW + MN;
+                let interpretation = "";
+
+                if (agateScore >= 21 && agateScore <= 25) {
+                  interpretation = "Highly engaged and motivated";
+                } else if (agateScore >= 16 && agateScore <= 20) {
+                  interpretation = "Moderately engaged and motivated";
+                } else if (agateScore >= 11 && agateScore <= 15) {
+                  interpretation =
+                    "Minimally engaged/Somewhat vulnerable to drop off";
+                } else if (agateScore >= 6 && agateScore <= 10) {
+                  interpretation = "Highly vulnerable to dropping off";
+                } else if (agateScore >= 0 && agateScore <= 5) {
+                  interpretation = "Extremely vulnerable to dropping off";
+                }
+
+                return resolve({
+                  message: "AGATE score",
+                  score: agateScore,
+                  interpretation: interpretation,
+                });
+              }
+            })
+            .catch((e) => {
+              return reject(e);
+            });
         }
       })
       .catch((e) => {
@@ -394,10 +406,6 @@ module.exports.agateDelete = (args, context, logger) =>
       .catch((e) => {
         logger.error("Error with agate.delete");
         return reject({
-          // Must be 405 (Method Not Allowed) or 409 (Conflict)
-          // 405 if you do not want to allow the delete
-          // 409 if you can't delete because of referential
-          // integrity or some other reason
           code: 409,
           message: "Error deleting agate record.",
         });

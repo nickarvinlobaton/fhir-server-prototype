@@ -89,6 +89,34 @@ const query = {
       return e;
     }
   },
+  filterAgateRecordByMonth: async (type, id) => {
+    let qs = `SELECT filtered_record
+    FROM \`fhir_sample\` res
+    UNNEST res.record as filtered_record
+    WHERE res.type='${type}' AND res.referenceId='${id}' AND filtered_record.date BETWEEN DATE_ADD_STR(CLOCK_STR(),-1,"month") AND CLOCK_STR()`;
+
+    try {
+      let result = await cluster.query(qs);
+      return result;
+    } catch (e) {
+      console.log("err");
+      return e;
+    }
+  },
+  filterAgateRecordByWeek: async (type, id) => {
+    let qs = `SELECT filtered_record
+    FROM \`fhir_sample\` res
+    UNNEST res.record as filtered_record
+    WHERE res.type='${type}' AND res.referenceId='${id}' AND filtered_record.date BETWEEN DATE_ADD_STR(CLOCK_STR(),-7,"day") AND CLOCK_STR();`;
+
+    try {
+      let result = await cluster.query(qs);
+      return result;
+    } catch (e) {
+      console.log("err");
+      return e;
+    }
+  },
 };
 
 module.exports = query;
