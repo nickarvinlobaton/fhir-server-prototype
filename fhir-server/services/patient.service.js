@@ -285,7 +285,10 @@ module.exports.agateScore = (args, context, logger) =>
           if (
             parseFloat(filteredRecord[lastIndex].filtered_record.weight) -
               parseFloat(filteredRecord[0].filtered_record.weight) <
-            1
+              1 &&
+            parseFloat(filteredRecord[lastIndex].filtered_record.weight) -
+              parseFloat(filteredRecord[0].filtered_record.weight) !=
+              0
           ) {
             WLS = 10;
           } else if (
@@ -296,7 +299,7 @@ module.exports.agateScore = (args, context, logger) =>
             WLS = 5;
           } else if (
             parseFloat(filteredRecord[lastIndex].filtered_record.weight) -
-              parseFloat(filteredRecord[0].filtered_record.weight) >
+              parseFloat(filteredRecord[0].filtered_record.weight) >=
             1
           ) {
             WLS = 0;
