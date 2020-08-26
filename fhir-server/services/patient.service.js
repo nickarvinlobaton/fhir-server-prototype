@@ -53,7 +53,6 @@ module.exports.searchById = (args, context, logger) =>
         if (res.rows.length < 1) {
           let message = "No Patient resource with the given ID found.";
           throw new ServerError(message, {
-            // Set this to make the HTTP status code 409
             statusCode: 404,
             // Add any normal operation outcome stuff here
             issue: [
@@ -228,7 +227,6 @@ module.exports.agateFind = (args, context, logger) =>
         if (res.rows.length < 1) {
           let message = "No Patient resource with the given ID found.";
           throw new ServerError(message, {
-            // Set this to make the HTTP status code 409
             statusCode: 404,
             // Add any normal operation outcome stuff here
             issue: [
