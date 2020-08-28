@@ -2,6 +2,7 @@
 
 fhir-server/node_modules/
 fhir-server/package-lock.json
+fhir-server/.env
 
 auth-server/node_modules/
 auth-server/public/hot
@@ -14,3 +15,5 @@ auth-server/Homestead.json
 auth-server/Homestead.yaml
 auth-server/npm-debug.log
 auth-server/yarn-error.log
+auth-server/storage/
+auth-server/.env

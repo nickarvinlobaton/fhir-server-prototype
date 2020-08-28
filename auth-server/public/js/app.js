@@ -49878,8 +49878,8 @@ __webpack_require__.r(__webpack_exports__);
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(/*! C:\Users\Nick\Desktop\auth_server\resources\js\app.js */"./resources/js/app.js");
-module.exports = __webpack_require__(/*! C:\Users\Nick\Desktop\auth_server\resources\sass\app.scss */"./resources/sass/app.scss");
+__webpack_require__(/*! /var/www/fhir-server-prototype/auth-server/resources/js/app.js */"./resources/js/app.js");
+module.exports = __webpack_require__(/*! /var/www/fhir-server-prototype/auth-server/resources/sass/app.scss */"./resources/sass/app.scss");
 
 
 /***/ })
