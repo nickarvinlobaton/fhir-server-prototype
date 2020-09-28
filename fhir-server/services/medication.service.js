@@ -88,7 +88,7 @@ module.exports.update = (args, { req }, logger) =>
 
     query
       .updateResource(resourceType, args.id, doc)
-      .then((res) => {
+      .then(() => {
         return resolve({
           id: args.id,
         });
@@ -113,7 +113,7 @@ module.exports.patch = (args, { req }, logger) =>
 
         query
           .updateResource(resourceType, current.id, patchData)
-          .then((res) => {
+          .then(() => {
             return resolve({
               id: args.id,
             });

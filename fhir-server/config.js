@@ -17,29 +17,6 @@ const config = {
     Patient: {
       service: "./services/patient.service.js",
       versions: [VERSIONS["4_0_0"]],
-      // Custom operations
-      operation: [
-        {
-          name: "agate-upsert",
-          route: "/agate-upsert",
-          method: "POST",
-        },
-        {
-          name: "agate-find",
-          route: "/:id/agate-find",
-          method: "GET",
-        },
-        {
-          name: "agate-delete",
-          route: "/agate-delete",
-          method: "POST",
-        },
-        {
-          name: "agate-score",
-          route: "/:id/agate-score",
-          method: "GET",
-        },
-      ],
     },
     Medication: {
       service: "./services/medication.service.js",

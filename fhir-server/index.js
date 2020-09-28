@@ -5,7 +5,7 @@ const config = require("./config");
 
 require("dotenv").config();
 
-// AUTH for express routes, same as FHIR server
+// AUTH for express routes, same auth as FHIR server
 // Integrate it into your routes via middleware or some other mechanism
 // Our strategy is a bearer strategy so use bearer for the name
 const passport = require("passport");
@@ -15,7 +15,7 @@ let options = { session: false };
 // Initialize Express
 let app = express();
 
-// Add router to express app
+// Add routes to express
 app.use(
   "/api/agate",
   passport.authenticate(name, options),
