@@ -18,8 +18,9 @@ class CheckVerifiedUser
     {
         $user = Auth::user();
         if(!$user->is_verified) {
-            Auth::logout();
-            return redirect()->route('login');
+//            Auth::logout();
+//            return redirect()->route('login');
+            return redirect()->route('duo');
         } else {
             return $next($request);
         }
