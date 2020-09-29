@@ -20,4 +20,4 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::any('/home', 'HomeController@index')->name('home')->middleware('duo_verified');
-Route::any('/login/duo', 'AuthController@duoAuthentication')->name('duo');
+Route::any('/login/duo', 'AuthController@duoAuthentication')->name('duo')->middleware('auth');

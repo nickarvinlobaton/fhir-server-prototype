@@ -21,6 +21,14 @@ class AuthController extends Controller
                 $user = User::where('email', $userAuthenticated)->first();
                 $user->is_verified = true;
                 $user->save();
+
+                // Check if request is to login via api using oauth2, /oauth/authorize
+                if ($request->session()->exists('params')) {
+                    // Get params if using oauth/authorize to redirect to oauth/authorize route
+                    $params = $request->session()->pull('params');
+                    return redirect($params['return_to']);
+                }
+                // if via web just redirect to dashboard
                 return redirect()->route('home');
             }
         }
